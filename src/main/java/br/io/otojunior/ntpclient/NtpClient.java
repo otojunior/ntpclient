@@ -11,8 +11,6 @@ import java.net.UnknownHostException;
  * @since 26/02/2023
  */
 public class NtpClient {
-	private static final String NTP_SERVER = "pool.ntp.br";
-
 	/**
 	 * @param args
 	 * @throws Exception 
@@ -20,7 +18,7 @@ public class NtpClient {
 	 * @throws UnknownHostException 
 	 */
 	public static void main(String[] args) throws Exception {
-        try (var service = new NtpClientService(NTP_SERVER)) {
+        try (var service = new NtpClientService(args[0])) {
         	service.setLocalTime(service.getNtpTime());
         }
 	}
