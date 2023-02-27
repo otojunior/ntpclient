@@ -24,6 +24,7 @@ import com.sun.jna.platform.win32.WinBase.SYSTEMTIME;
 public class NtpClientService implements AutoCloseable {
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
+    private static final Kernel32 KERNEL32 = Kernel32.INSTANCE;
 
     private final String server;
     private final InetAddress inetAddr;
@@ -90,7 +91,7 @@ public class NtpClientService implements AutoCloseable {
         systemTime.wSecond = (short) time.getSecond();
         systemTime.wMilliseconds = (short) time.get(ChronoField.MILLI_OF_SECOND);
 
-        var result = Kernel32.INSTANCE.SetLocalTime(systemTime);
+		var result = KERNEL32.SetLocalTime(systemTime);
 
         if (result) {
             Logger.info("Data/Hora definida: {}", time.format(FMT));

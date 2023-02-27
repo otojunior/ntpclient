@@ -18,7 +18,9 @@ public class NtpClient {
      * @throws UnknownHostException 
      */
     public static void main(String[] args) throws Exception {
-        try (var service = new NtpClientService(args[0])) {
+        try (var service = new NtpClientService(args.length == 0
+        		? "pool.ntp.br"
+				: args[0])) {
             service.setLocalTime(service.getNtpTime());
         }
     }
