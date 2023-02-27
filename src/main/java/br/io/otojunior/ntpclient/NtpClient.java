@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalField;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
+import org.tinylog.Logger;
 
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase.SYSTEMTIME;
@@ -35,14 +35,19 @@ public class NtpClient {
         try {
         	final var defaultZoneId = ZoneId.systemDefault();
         	final var inetAddr = InetAddress.getByName(NTP_SERVER);
-        	final var fmthora = DateTimeFormatter.ofPattern("HH:mm:ss");
-        	final var fmtdata = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        	final var fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
 
-        	watchStart = System.currentTimeMillis();
+        	if (Logger.isDebugEnabled()) {
+        		Logger.debug("Servidor NTP: {}", NTP_SERVER);
+        		if (Logger.isTraceEnabled()) {
+        			watchStart = System.nanoTime();
+        			Logger.trace("Início do calculo do tempo total");
+        		}
+        	}
 
             client.open();
             var timeInfo = client.getTime(inetAddr);
-
+            
             var returnTime = timeInfo
         		.getMessage()
         		.getTransmitTimeStamp()
@@ -51,6 +56,11 @@ public class NtpClient {
 			var time = LocalDateTime
 				.ofInstant(Instant
 				.ofEpochMilli(returnTime), defaultZoneId);
+			var timeStr = time.format(fmt);
+			
+			if (Logger.isDebugEnabled()) {
+				Logger.debug("Data/Hora obitda: {}", timeStr);
+			}
 
 			var systemTime = new SYSTEMTIME();
 			systemTime.wYear = (short) time.getYear();
@@ -62,16 +72,18 @@ public class NtpClient {
 	        systemTime.wMilliseconds = (short) time.get(ChronoField.MILLI_OF_SECOND);
 	        
 	        var result = Kernel32.INSTANCE.SetLocalTime(systemTime);
-	        System.out.println(result
-	        	? "Data e hora do sistema definidas com sucesso"
-    			: "Falha ao definir a data e hora do sistema");
-
-	        System.out.println("NTP time: " + time.format(fmthora));
-            System.out.println("NTP date: " + time.format(fmtdata));
+	        
+	        if (result) {
+	        	Logger.info("Data/Hora definida: {}", timeStr);
+	        } else {
+	        	Logger.error("Erro na definição de Data/Hora");
+	        }
         } finally {
             client.close();
-            watchEnd = System.currentTimeMillis();
-            System.out.println("Calculate time: " + (watchEnd-watchStart));
+            if (Logger.isTraceEnabled()) {
+            	watchEnd = System.nanoTime();
+            	Logger.trace("Tempo Total (nano): {}", (watchEnd-watchStart));
+    		}
         }
 	}
 }
