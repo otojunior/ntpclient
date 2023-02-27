@@ -11,15 +11,15 @@ import java.net.UnknownHostException;
  * @since 26/02/2023
  */
 public class NtpClient {
-	/**
-	 * @param args
-	 * @throws Exception 
-	 * @throws SocketException 
-	 * @throws UnknownHostException 
-	 */
-	public static void main(String[] args) throws Exception {
+    /**
+     * @param args
+     * @throws Exception 
+     * @throws SocketException 
+     * @throws UnknownHostException 
+     */
+    public static void main(String[] args) throws Exception {
         try (var service = new NtpClientService(args[0])) {
-        	service.setLocalTime(service.getNtpTime());
+            service.setLocalTime(service.getNtpTime());
         }
-	}
+    }
 }
