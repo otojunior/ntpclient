@@ -3,16 +3,14 @@
  */
 package br.io.otojunior.ntpclient;
 
+import static java.lang.System.out;
 import java.net.InetAddress;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
-
 import org.apache.commons.net.ntp.NTPUDPClient;
-import org.tinylog.Logger;
-
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase.SYSTEMTIME;
 
@@ -22,16 +20,16 @@ import com.sun.jna.platform.win32.WinBase.SYSTEMTIME;
  * @since 27/02/2023
  */
 public class NtpClientService implements AutoCloseable {
-    private static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
-    private static final Kernel32 KERNEL32 = Kernel32.INSTANCE;
+    static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
+    static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
+    static final Kernel32 KERNEL32 = Kernel32.INSTANCE;
 
-    private final String server;
-    private final InetAddress inetAddr;
-    private final NTPUDPClient client;
+    final String server;
+    final InetAddress inetAddr;
+    final NTPUDPClient client;
 
-    private long watchStart = 0L;
-    private long watchEnd = 0L;
+    long watchStart = 0L;
+    long watchEnd = 0L;
 
     /**
      * Construtor do serviço de obtenção do NTP.
@@ -39,13 +37,9 @@ public class NtpClientService implements AutoCloseable {
      * @throws Exception
      */
     public NtpClientService(final String server) throws Exception {
-        if (Logger.isDebugEnabled()) {
-            Logger.debug("Servidor NTP: {}", server);
-            if (Logger.isTraceEnabled()) {
-                this.watchStart = System.nanoTime();
-                Logger.trace("Início do calculo do tempo total");
-            }
-        }
+        out.println("[NtpClient] Servidor NTP: " + server);
+        this.watchStart = System.nanoTime();
+        out.println("[NtpClient] Início do calculo do tempo total");
 
         this.server = server;
         this.inetAddr = InetAddress.getByName(this.server);
@@ -70,9 +64,7 @@ public class NtpClientService implements AutoCloseable {
             .ofInstant(Instant
             .ofEpochMilli(returnTime), DEFAULT_ZONE_ID);
 
-        if (Logger.isDebugEnabled()) {
-            Logger.debug("Data/Hora obitda: {}", time.format(FMT));
-        }
+        out.println("[NtpClient] Data/Hora obitda: " + time.format(FMT));
 
         return time;
     }
@@ -94,9 +86,9 @@ public class NtpClientService implements AutoCloseable {
 		var result = KERNEL32.SetLocalTime(systemTime);
 
         if (result) {
-            Logger.info("Data/Hora definida: {}", time.format(FMT));
+            out.println("[NtpClient] Data/Hora definida: " + time.format(FMT));
         } else {
-            Logger.error("Erro na definição de Data/Hora");
+            out.println("[NtpClient] Erro na definição de Data/Hora");
         }
     }
 
@@ -107,9 +99,7 @@ public class NtpClientService implements AutoCloseable {
     public void close() throws Exception {
         client.close();
         
-        if (Logger.isTraceEnabled()) {
-            this.watchEnd = System.nanoTime();
-            Logger.trace("Tempo Total (nano): {}", (this.watchEnd - this.watchStart));
-        }
+        this.watchEnd = System.nanoTime();
+        out.println("[NtpClient] Tempo Total (nano): " + (this.watchEnd - this.watchStart));
     }
 }
